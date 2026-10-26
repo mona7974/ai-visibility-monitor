@@ -1,0 +1,134 @@
+{
+  "targetBrand": "示例品牌",
+  "round": "第1轮",
+  "delaySeconds": [
+    12,
+    22
+  ],
+  "maxWaitSeconds": 150,
+  "stableSeconds": 3,
+  "typingDelayMs": [
+    25,
+    70
+  ],
+  "platforms": {
+    "deepseek": {
+      "name": "DeepSeek",
+      "url": "https://chat.deepseek.com/",
+      "newChatTexts": [
+        "开启新对话",
+        "新对话",
+        "新建对话",
+        "New chat"
+      ],
+      "inputSelectors": [
+        "textarea",
+        "div[contenteditable='true']",
+        "[role='textbox']"
+      ],
+      "answerSelectors": [
+        "div[class*='ds-markdown']",
+        "div[class*='markdown']",
+        "div[class*='message'] div[class*='content']"
+      ]
+    },
+    "doubao": {
+      "name": "豆包",
+      "url": "https://www.doubao.com/chat/",
+      "newChatTexts": [
+        "新对话",
+        "开启新对话",
+        "新建对话"
+      ],
+      "inputSelectors": [
+        "textarea",
+        "div[contenteditable='true']",
+        "[role='textbox']"
+      ],
+      "answerSelectors": [
+        "div[class*='flow-markdown-body']",
+        "div[class*='markdown']",
+        "div[class*='message-content']"
+      ]
+    },
+    "kimi": {
+      "name": "Kimi",
+      "url": "https://www.kimi.com/",
+      "newChatTexts": [
+        "新对话",
+        "新建对话",
+        "New chat"
+      ],
+      "inputSelectors": [
+        "div[contenteditable='true']",
+        "textarea",
+        "[role='textbox']"
+      ],
+      "answerSelectors": [
+        "div[class*='segment-content']",
+        "div[class*='markdown']",
+        "div[class*='answer']"
+      ]
+    },
+    "yuanbao": {
+      "name": "腾讯元宝",
+      "url": "https://yuanbao.tencent.com/chat/",
+      "delaySeconds": [
+        18,
+        30
+      ],
+      "newChatTexts": [
+        "新建对话",
+        "新对话",
+        "新的对话"
+      ],
+      "inputSelectors": [
+        "div[contenteditable='true']",
+        "textarea",
+        "[role='textbox']"
+      ],
+      "answerSelectors": [
+        "div[class*='hyc-content-md']",
+        "div[class*='markdown']",
+        "div[class*='agent-chat__bubble']"
+      ]
+    },
+    "yiyan": {
+      "name": "文心一言",
+      "url": "https://yiyan.baidu.com/",
+      "delaySeconds": [
+        25,
+        45
+      ],
+      "newChatTexts": [
+        "新建对话",
+        "新对话",
+        "新的对话"
+      ],
+      "inputSelectors": [
+        "#chat-textarea",
+        "textarea",
+        "div[contenteditable='true']",
+        "[role='textbox']"
+      ],
+      "answerSelectors": [
+        "div[class*='markdown']",
+        "div[class*='answer-content']",
+        "div[class*='content']"
+      ]
+    },
+    "stub": {
+      "name": "本地测试桩",
+      "url": "http://127.0.0.1:8801/stub_chat.html",
+      "newChatTexts": [
+        "新对话"
+      ],
+      "inputSelectors": [
+        "#chat-input"
+      ],
+      "answerSelectors": [
+        "#answer"
+      ]
+    }
+  }
+}

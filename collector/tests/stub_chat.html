@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>测试用模拟对话页（采集器自测，不属于产品）</title>
+<style>
+  body{margin:0;font:15px/1.7 -apple-system,"PingFang SC",sans-serif;background:#f6f8f7;color:#16221b}
+  header{display:flex;gap:12px;align-items:center;padding:12px 18px;background:#fff;border-bottom:1px solid #e3e9e5}
+  header button{padding:6px 14px;border:1px solid #cfdcd5;background:#fff;border-radius:8px;cursor:pointer}
+  main{max-width:820px;margin:0 auto;padding:20px 18px 140px}
+  .msg{margin:14px 0}
+  .q{background:#e8f7ee;border-radius:10px;padding:10px 14px;display:inline-block}
+  .a{background:#fff;border:1px solid #e3e9e5;border-radius:12px;padding:16px 18px;white-space:pre-wrap}
+  footer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #e3e9e5;padding:14px 18px}
+  footer textarea{width:100%;max-width:820px;display:block;margin:0 auto;padding:12px;border:1px solid #cfdcd5;border-radius:10px;font:inherit;height:64px}
+  .hint{max-width:820px;margin:6px auto 0;font-size:12px;color:#77877f}
+</style>
+</head>
+<body>
+<header>
+  <button id="newchat">新对话</button>
+  <strong>模拟 AI 对话页</strong>
+  <span style="color:#77877f;font-size:13px">仅供采集器自测：输入问题按回车，答案会像真实平台一样逐字生成</span>
+</header>
+<main id="chat"></main>
+<footer>
+  <textarea id="chat-input" placeholder="输入问题，按回车发送…"></textarea>
+  <div class="hint">停 止 生 成（模拟生成中的停止按钮，用于检测生成状态）</div>
+</footer>
+
+<script>
+const VARIANTS = [
+  `国内第三方数据中心服务商中，规模靠前的几家包括：示例品牌（ExampleBrand）、竞品A、竞品B、竞品C。\n\n其中示例品牌在一线城市周边资源储备充足，是金融客户常用选择；竞品A在定制化批发型机房上有优势。\n\n参考来源：\n- 示例品牌官网 https://www.example-brand.com/about\n- 知乎相关讨论 https://zhuanlan.zhihu.com/p/123456\n- 中国IDC圈的行业报道 https://www.idcquan.com/news/2023.html\n\n报价需按机柜功率与带宽单独议价，整柜月租一般在 3000~8000 元。`,
+  `常见的第三方 IDC 服务商有示例品牌、竞品A、竞品B、竞品C等。\n\n选购时主要看四点：机房等级（Tier 等级）、PUE、电力冗余、网络出口质量。第三方数据中心相比运营商机房，在定制化与交付速度上更灵活。\n\n可参考百度百科「互联网数据中心」词条，以及 36氪的行业分析 https://36kr.com/p/7890 。`,
+  `这类问题需要联系服务商获取报价，价格受城市、机房等级、单机柜功率和带宽影响很大。\n\n一般整柜月租在 3000~8000 元区间，定制化大客户可议价。建议先明确自己的功率密度和扩容预期，再向多家服务商要报价单对比。`
+];
+let idx = 0;
+
+const chat = document.getElementById('chat');
+const input = document.getElementById('chat-input');
+
+document.getElementById('newchat').addEventListener('click', () => {
+  chat.innerHTML = '';
+  input.value = '';
+  input.focus();
+});
+
+function stream(el, text, done) {
+  let i = 0;
+  const timer = setInterval(() => {
+    i += 6 + Math.floor(Math.random() * 10);
+    el.textContent = text.slice(0, i);
+    if (i >= text.length) {
+      clearInterval(timer);
+      el.textContent = text;
+      if (done) done();
+    }
+  }, 90);
+}
+
+input.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.shiftKey) return;
+  const q = input.value.trim();
+  if (!q) return;
+  e.preventDefault();
+  input.value = '';
+
+  const qWrap = document.createElement('div');
+  qWrap.className = 'msg';
+  qWrap.innerHTML = '<div class="q"></div>';
+  qWrap.querySelector('.q').textContent = q;
+  chat.appendChild(qWrap);
+
+  const aWrap = document.createElement('div');
+  aWrap.className = 'msg';
+  aWrap.innerHTML = '<div class="a markdown-body" id="answer"></div>';
+  chat.appendChild(aWrap);
+
+  const body = VARIANTS[idx % VARIANTS.length];
+  idx++;
+  stream(aWrap.querySelector('#answer'), body, () => {
+    // 生成结束后再补上答案里的链接（模拟带引用的回答）
+    aWrap.querySelector('#answer').innerHTML =
+      body.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1">$1</a>');
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  window.scrollTo(0, document.body.scrollHeight);
+});
+</script>
+</body>
+</html>

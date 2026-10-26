@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 可见度监测台</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="app-head">
+  <div class="head-inner">
+    <div class="logo">
+      <span class="logo-mark">GEO</span>
+      <span class="logo-text">
+        <strong>AI 可见度监测台</strong>
+        <em>监测品牌在 AI 搜索回答中的被提及与被引用情况</em>
+      </span>
+      <span class="mode-badge" id="modeBadge" hidden>本机版 · 可自动测试</span>
+    </div>
+    <div class="head-brand">
+      <label for="quickBrand">目标品牌</label>
+      <input id="quickBrand" type="text" placeholder="填写你要监测的品牌">
+      <span class="save-dot" id="saveState">已保存</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab is-active" data-view="dashboard">看板</button>
+  <button class="tab" data-view="record">录入</button>
+  <button class="tab" data-view="records">记录</button>
+  <button class="tab" data-view="settings">设置</button>
+  <button class="tab" data-view="guide">说明</button>
+</nav>
+
+<main class="wrap">
+
+  <div class="notice" id="localNotice">
+    <div class="notice-body">
+      <strong>数据保存在本机浏览器</strong>
+      <span>换设备、换浏览器或清理缓存后会看不到数据。推荐双击项目文件夹里的「启动监测台.command」用本地版——采集结果自动同步，无需手动导入。</span>
+    </div>
+    <button class="notice-x" id="noticeClose" aria-label="关闭提示">×</button>
+  </div>
+
+  <!-- ============ 看板 ============ -->
+  <section class="view is-active" id="view-dashboard">
+    <div class="bar">
+      <div class="bar-left">
+        <label for="dashPlatform">平台</label>
+        <select id="dashPlatform"></select>
+        <label for="dashRound">轮次</label>
+        <select id="dashRound"></select>
+      </div>
+      <div class="bar-right">
+        <span class="hint" id="dashHint"></span>
+        <button class="btn btn-primary btn-sm" id="btnGotoRun">▶ 自动测试</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h3>各 AI 平台提及率</h3>
+          <span class="card-sub" id="subPlatform">点柱子可切换看板到该平台 · 再点一次还原</span>
+        </div>
+        <div class="chart" id="chartPlatform"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>各关键词提及率</h3>
+          <span class="card-sub" id="subKeyword">越低越该优先补内容</span>
+        </div>
+        <div class="chart" id="chartKeyword"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>AI 引用来源排行</h3>
+          <span class="card-sub" id="subSource">我们该去哪些信源铺内容</span>
+        </div>
+        <div class="chart" id="chartSource"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>轮次趋势</h3>
+          <span class="card-sub">优化前后有没有变好</span>
+        </div>
+        <div class="chart" id="chartTrend"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>内容缺口清单</h3>
+        <span class="card-sub">提及率为 0 的关键词，就是明天的选题</span>
+      </div>
+      <div id="gapList"></div>
+    </div>
+  </section>
+
+  <!-- ============ 录入 ============ -->
+  <section class="view" id="view-record">
+    <div class="card">
+      <div class="card-head">
+        <h3>任务进度</h3>
+        <span class="card-sub" id="taskProgressText"></span>
+      </div>
+      <div class="progress"><span id="taskProgressBar"></span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>第一步 · 选任务并提问</h3></div>
+      <div class="form-row">
+        <div class="field grow">
+          <label for="rKeyword">关键词 / 提问</label>
+          <select id="rKeyword"></select>
+        </div>
+        <div class="field grow">
+          <label for="rPlatform">AI 平台</label>
+          <select id="rPlatform"></select>
+        </div>
+        <div class="field">
+          <label for="rRound">轮次</label>
+          <select id="rRound"></select>
+        </div>
+        <div class="field">
+          <label for="rDate">测试日期</label>
+          <input id="rDate" type="date">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnCopyQ">复制问题</button>
+        <button class="btn" id="btnOpenPlatform">打开平台</button>
+        <button class="btn btn-ghost" id="btnNextTask">跳到下一个未测</button>
+      </div>
+      <p class="tip">提问时请开一个<strong>全新对话</strong>，把关键词原样粘贴发送，前后不要加任何提示语。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>第二步 · 把 AI 的回答整段粘进来</h3>
+        <span class="card-sub">自动判断是否提到目标品牌、排第几位、引用了哪些来源</span>
+      </div>
+      <textarea id="rAnswer" class="answer-box" placeholder="把 AI 的完整回答复制粘贴到这里（含它给出的链接），然后点下面的按钮"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnAnalyze">自动判定</button>
+        <button class="btn btn-ghost" id="btnClearAnswer">清空</button>
+        <button class="btn btn-ghost" id="btnManual">不粘贴，手动填</button>
+      </div>
+    </div>
+
+    <div class="card" id="resultCard">
+      <div class="card-head">
+        <h3>第三步 · 核对结果并保存</h3>
+        <span class="card-sub">自动判定可能有偏差，以你核对的为准</span>
+      </div>
+      <div id="autoFlags" class="flags"></div>
+      <div class="form-row">
+        <div class="field">
+          <label for="rMentioned">是否提到目标品牌</label>
+          <select id="rMentioned">
+            <option value="">未判定</option>
+            <option value="是">是</option>
+            <option value="否">否</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rRank">首次出现位次</label>
+          <input id="rRank" type="number" min="1" placeholder="如 2">
+        </div>
+        <div class="field grow">
+          <label for="rCompetitors">同时提到的其他品牌</label>
+          <input id="rCompetitors" type="text" placeholder="自动识别，可修改">
+        </div>
+        <div class="field">
+          <label for="rSentiment">态度倾向</label>
+          <select id="rSentiment">
+            <option value="">未判定</option>
+            <option value="正向">正向</option>
+            <option value="中性">中性</option>
+            <option value="负向">负向</option>
+            <option value="不适用">不适用（没提到我们）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rHasError">是否存在明显错误</label>
+          <select id="rHasError">
+            <option value="">未判定</option>
+            <option value="有">有</option>
+            <option value="无">无</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field grow">
+          <label for="rSources">引用来源</label>
+          <input id="rSources" type="text" placeholder="自动提取，可修改；多个用 ; 分隔">
+          <div class="chips" id="srcChips"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field grow">
+          <label for="rNote">备注与优化灵感</label>
+          <textarea id="rNote" class="note-box" placeholder="AI 是引用哪条来源说的？我们哪条信息缺失或过时？"></textarea>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnSave">保存记录</button>
+        <button class="btn btn-ghost" id="btnResetForm">重置表单</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>批量录入（一次性贴多条回答）</h3>
+        <span class="card-sub">连续问好几条后，用一行 --- 分隔，一次判定全部</span>
+      </div>
+      <textarea id="batchAnswer" class="answer-box" placeholder="第 1 条回答&#10;---&#10;第 2 条回答&#10;---&#10;第 3 条回答"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnBatch">按当前任务顺序批量判定并保存</button>
+        <span class="hint" id="batchHint"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 记录 ============ -->
+  <section class="view" id="view-records">
+    <div class="card">
+      <div class="card-head">
+        <h3>监测记录</h3>
+        <span class="card-sub" id="recCount"></span>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="fRound">轮次</label>
+          <select id="fRound"></select>
+        </div>
+        <div class="field">
+          <label for="fPlatform">平台</label>
+          <select id="fPlatform"></select>
+        </div>
+        <div class="field">
+          <label for="fMentioned">是否提到</label>
+          <select id="fMentioned">
+            <option value="">全部</option>
+            <option value="是">是</option>
+            <option value="否">否</option>
+            <option value="__blank">未判定</option>
+          </select>
+        </div>
+        <div class="field grow">
+          <label for="fText">搜索</label>
+          <input id="fText" type="search" placeholder="关键词 / 来源 / 备注">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnAutoJudge">一键判定未判定记录</button>
+        <button class="btn" id="btnExportCsv">导出 CSV</button>
+        <button class="btn" id="btnExportJson">导出备份</button>
+        <button class="btn" id="btnImportJson">导入备份</button>
+        <input type="file" id="fileImport" accept=".json" hidden>
+        <button class="btn btn-ghost" id="btnSeedDemo">填入 5 条示例（体验用）</button>
+        <button class="btn btn-danger-ghost" id="btnClearRecords">清空全部记录</button>
+      </div>
+      <div class="table-scroll">
+        <table class="tbl" id="recTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 设置 ============ -->
+  <section class="view" id="view-settings">
+    <div class="card">
+      <div class="card-head">
+        <h3>监测目标</h3>
+        <span class="card-sub">自动判定靠这几项识别「有没有提到我们」</span>
+      </div>
+      <div class="form-row">
+        <div class="field grow">
+          <label for="sBrand">目标品牌</label>
+          <input id="sBrand" type="text" placeholder="如：你的品牌">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field grow">
+          <label for="sAliases">品牌别名（一行一个，含中英文名、简称、产品名）</label>
+          <textarea id="sAliases" class="note-box" placeholder="品牌A&#10;品牌别名"></textarea>
+        </div>
+        <div class="field grow">
+          <label for="sCompetitors">竞品 / 同行业品牌库（一行一个，用于数位次）</label>
+          <textarea id="sCompetitors" class="note-box" placeholder="世纪互联&#10;光环新网&#10;数据港"></textarea>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" id="btnSaveTarget">保存</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>关键词库</h3>
+        <span class="card-sub">每轮按这些关键词去问 AI</span>
+      </div>
+      <div id="kwEditor" class="editor"></div>
+      <div class="btn-row">
+        <button class="btn" id="btnAddKw">新增关键词</button>
+        <button class="btn btn-primary" id="btnSaveKw">保存关键词</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>平台列表</h3>
+        <span class="card-sub">名称 + 网址（用于一键打开）</span>
+      </div>
+      <div id="pfEditor" class="editor"></div>
+      <div class="btn-row">
+        <button class="btn" id="btnAddPf">新增平台</button>
+        <button class="btn btn-primary" id="btnSavePf">保存平台</button>
+      </div>
+    </div>
+
+    <div class="card" id="cardAutoRun">
+      <div class="card-head">
+        <h3>自动测试 · 点一下就开始跑</h3>
+        <span class="card-sub">浏览器自动提问 → 抓取回答 → 自动进看板</span>
+      </div>
+
+      <div id="runNeedLocal" class="flag warn" hidden>
+        <b>需要本地版</b>
+        <span>这个按钮要由你本机的服务去开浏览器，所以得用「<code>启动监测台.command</code>」打开的页面来点。线上分享链接点不了。</span>
+      </div>
+
+      <div id="runReady" hidden>
+        <div class="form-row">
+          <div class="field">
+            <label for="runPlatform">平台</label>
+            <select id="runPlatform"></select>
+          </div>
+          <div class="field">
+            <label for="runRound">轮次</label>
+            <select id="runRound"></select>
+          </div>
+          <div class="field">
+            <label for="runScope">采集范围</label>
+            <select id="runScope">
+              <option value="all">全部问题</option>
+              <option value="one">只采 1 条（试跑，不改正式数据）</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="runMode">已有数据</label>
+            <select id="runMode">
+              <option value="resume">跳过采过的，只补缺的</option>
+              <option value="reset">全部重采（覆盖旧结果）</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnRunStart">▶ 开始自动测试</button>
+          <button class="btn btn-ghost" id="btnRunStop" hidden>停止采集</button>
+        </div>
+
+        <div id="runPanel" hidden>
+          <div class="run-head">
+            <span id="runState">准备中…</span>
+            <span id="runProgress"></span>
+          </div>
+          <div class="run-bar"><i id="runBar"></i></div>
+          <pre class="run-log" id="runLog"></pre>
+        </div>
+      </div>
+
+      <p class="tip"><strong>怎么用：</strong>选好平台点「开始自动测试」→ 浏览器窗口会自动弹出 → 第一次用某个平台需要你在那个窗口里<strong>扫码登录</strong>（会话会记住，之后不用再登）→ 登好后程序自己逐条提问、等答案生成完再抓取，每条随机间隔 10~20 秒。跑完数据自动进看板，不用手动导入。</p>
+      <p class="tip"><strong>风险提示：</strong>自动化访问可能触发人机验证甚至限制账号，建议只用于个人研究。程序单条串行、每条随机间隔、遇到验证码会立刻暂停等你手动处理，并且<strong>不接触你的账号密码</strong>。浏览器会话只存在本机，不想要就删掉 <code>collector/.profiles</code>。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>采集器与命令（备用入口）</h3>
+        <span class="card-sub">想手动跑或排查问题时用</span>
+      </div>
+      <div class="flag good"><b>已就绪</b><span>采集器装在 <code>collector</code> 文件夹里，用有头浏览器运行，登录由你自己完成。</span></div>
+      <ol class="howto">
+        <li>推荐直接用上面的「开始自动测试」按钮，不用碰命令行。</li>
+        <li>想手动跑：双击 <code>collector/运行采集.command</code> 选平台，效果和按钮一样。</li>
+        <li>页面标题变了抓不到内容时，在该启动器里选 <code>c</code> 校准选择器。</li>
+      </ol>
+      <div class="btn-row">
+        <button class="btn" id="btnCopyCmd">复制启动命令</button>
+        <button class="btn btn-ghost" id="btnCopyPath">复制采集器目录路径</button>
+      </div>
+      <p class="tip"><strong>说明：</strong>自动同步与一键开机都只在「启动监测台.command」打开的本地版里生效；线上分享链接没有这个通道，需要到「记录」页手动「导入备份」。两个入口用的是同一份判定逻辑，数据互不影响。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>数据</h3></div>
+      <div class="stat-line" id="dataStat"></div>
+      <div class="btn-row">
+        <button class="btn" id="btnResetAll">恢复出厂设置（清空记录与自定义）</button>
+      </div>
+      <p class="tip">恢复出厂设置会清空所有记录、关键词与平台自定义，且不可撤销。操作前请先到「记录」页导出备份。</p>
+    </div>
+  </section>
+
+  <!-- ============ 说明 ============ -->
+  <section class="view" id="view-guide">
+    <div class="card guide">
+      <h2>这个平台解决什么问题</h2>
+      <p>它把「品牌在 AI 搜索里有没有被提到」变成可量化、可复测的数字：用一组固定关键词去问各个 AI，记录它有没有提到你、排第几位、引用了哪些来源，然后自动算出<strong>提及率</strong>。基线做出来，之后的每一次内容优化才有证据可说。</p>
+
+      <h2>标准动作（一轮约 60~90 分钟）</h2>
+      <ol>
+        <li>到「录入」页选一个关键词 + 平台，点「复制问题」。</li>
+        <li>点「打开平台」，在<strong>全新对话</strong>里粘贴发送。</li>
+        <li>把 AI 的整段回答复制回来，点「自动判定」，核对结果后保存。</li>
+        <li>50 条做完回「看板」，看整体提及率与内容缺口清单。</li>
+      </ol>
+
+      <h2>判定口径（先统一口径再动手）</h2>
+      <ul>
+        <li><strong>什么算「提到」</strong>：出现品牌中文名或英文名即算「是」，产品名、子品牌、简称也算；只有模糊指代（如「某头部 IDC 厂商」）不算。</li>
+        <li><strong>首次出现位次</strong>：回答里被点名的品牌中，我们排第几。平台会自动数：在目标品牌出现之前，出现了几个已知品牌，就是第几个。</li>
+        <li><strong>态度倾向</strong>：<strong>只在提到了我们时才有意义</strong>。没提到时一律记「不适用」——回答里出现负面词（比如讲合同风险必然多负面表述）说的是这个行业，不是我们的口碑，别混进来。</li>
+        <li><strong>引用来源</strong>：把回答里的链接和提到的站点名提取出来（口头提到的「官网 / 行业报告」等也会被识别）。没提取到时，用输入框下方的快捷按钮一键补记。这一列决定你下一步该去哪里铺内容。</li>
+        <li><strong>明显错误</strong>：把品牌信息说错（成立年份、业务范围、隶属关系）填「有」，并在备注里写清错在哪一句。</li>
+      </ul>
+
+      <h2>四个必踩的坑</h2>
+      <ul>
+        <li>用带历史记录的对话问：AI 会被上文影响，结果和别人不可比。每次都必须开新对话。</li>
+        <li>随手换问法：关键词必须一字不改，改了各行之间就不可比，统计数据作废。</li>
+        <li>只问一次就下结论：AI 回答天然有 40%~60% 波动，同一问题连问三次可能两次不同。差异小就多测两轮。</li>
+        <li>忘记填判定列：没填「是否提到」的记录不计入提及率。</li>
+      </ul>
+
+      <h2>怎么读结果</h2>
+      <ul>
+        <li><strong>整体提及率</strong>＝提到目标品牌的条数 ÷ 已判定条数。第一轮算出来的就是你的基线分。</li>
+        <li><strong>关键词提及率为 0</strong>：最值得优先补的内容缺口。</li>
+        <li><strong>某平台明显偏低</strong>：该平台的检索信源里缺少我们的信息，去补这个平台偏爱的信源。</li>
+        <li><strong>引用来源排行</strong>：排名靠前、又不是我们自己内容的站点，就是最值得投稿/合作的信源。</li>
+      </ul>
+
+      <h2>数据保存在哪</h2>
+      <p><strong>推荐方式：双击项目文件夹里的「启动监测台.command」</strong>。它会在你本机启动一个小服务并打开看板——采集器每次跑完的结果都存在 <code>collector/out/</code> 文件夹里，页面打开或刷新时自动读取进来，<strong>不用手动导入</strong>。服务只监听本机（127.0.0.1），外部访问不到，关掉那个窗口就停。</p>
+      <p>线上分享链接没有这条通道：数据仍在<strong>当前浏览器的本机存储</strong>里，换设备、换浏览器、清理缓存后会看不到，需要到「记录」页手动「导入备份」。所以请养成习惯——每轮测完点一次「导出备份」，文件存到网盘或微信收藏里。</p>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/analyzer.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/store.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

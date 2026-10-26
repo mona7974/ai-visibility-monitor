@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>弹窗遮挡复现</title>
+<style>
+  body { font-family:-apple-system,'PingFang SC',sans-serif; margin:0; }
+  #chat-textarea { width:80%; height:60px; margin:40px; font-size:16px; }
+  /* 模仿文心一言的「任务模式引导弹窗」：盖住输入框 */
+  .cos-dialog { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:9999; }
+  .cos-dialog-body { background:#fff; padding:32px 40px; border-radius:12px; width:420px; }
+  .cos-dialog-body h3 { margin:0 0 12px; }
+  .close-x { margin-top:20px; padding:8px 20px; border:1px solid #ccc; border-radius:6px; background:#fff; cursor:pointer; }
+</style></head>
+<body>
+<h1>模拟聊天页</h1>
+<div id="answer">回答区（初始为空）</div>
+<textarea id="chat-textarea" placeholder="输入你的问题"></textarea>
+
+<!-- 诱饵：模仿元宝 agent-dialogue__content（「dialogue」包含 dialog 字样但不是弹窗）
+     历史事故：清弹窗逻辑曾把它当弹窗隐藏，导致答案永远不可见 -->
+<div class="agent-dialogue__content-split-pane" id="decoy-dialogue"
+     style="border:2px solid #39c; padding:12px; margin:0 40px;">
+  <div class="agent-dialogue__content--common__content">
+    <p class="agent-chat__markdown-body">这是模拟的 AI 回答正文，绝不能被清弹窗逻辑藏掉。</p>
+  </div>
+</div>
+
+<!-- 挡路的引导弹窗：不含任何输入框，点关闭按钮可关 -->
+<div class="cos-dialog _task-mode-guide-dialog_k91ea_1">
+  <div class="cos-dialog-body">
+    <h3>试试任务模式</h3>
+    <p>这是一个引导弹窗，会挡住下面的输入框，导致点击失败。</p>
+    <button class="close-x" aria-label="关闭">×</button>
+  </div>
+</div>
+
+<script>
+  document.querySelector('.close-x').addEventListener('click', function () {
+    document.querySelector('.cos-dialog').remove();
+  });
+  document.getElementById('chat-textarea').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      document.getElementById('answer').textContent = '已收到问题：' + this.value;
+    }
+  });
+</script>
+</body>
+</html>

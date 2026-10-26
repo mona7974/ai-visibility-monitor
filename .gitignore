@@ -1,0 +1,23 @@
+# 本机与凭证
+.DS_Store
+__pycache__/
+*.pyc
+.profiles/
+
+# 个人配置（含品牌与问题，勿提交）
+collector/config.json
+collector/questions.json
+collector/questions_*.json
+!collector/questions.example.json
+
+# 采集数据与产出
+collector/out/
+out/
+output/
+outputs/
+
+# 编辑器与工具
+.workbuddy/
+*.genie
+.vscode/
+.idea/
