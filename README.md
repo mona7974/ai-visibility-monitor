@@ -42,9 +42,7 @@
 
 [![看板总览](docs/screenshots/dashboard.png)](docs/screenshots/dashboard.png)
 [![引用来源排行](docs/screenshots/sources.png)](docs/screenshots/sources.png)
-
-<!-- 录屏转 GIF 后上传到 docs/screenshots/demo.gif，取消下一行注释即可自动播放 -->
-<!-- ![演示](docs/screenshots/demo.gif) -->
+![演示](docs/screenshots/demo.gif)
 
 > 监测对象已匿名化为「某头部 IDC 服务商」；示例数据仅用于演示看板形态。
 
